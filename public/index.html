@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Login, Registro e Recuperação</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      font-family: 'Roboto', sans-serif;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      background-color: rgba(255,255,255,0.1);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      text-align: center;
+      color: white;
+      width: 320px;
+      position: relative;
+    }
+    input {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+    }
+    button {
+      padding: 12px 30px;
+      font-size: 16px;
+      background: #ffffff;
+      color: #2a5298;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #e0e0e0;
+    }
+    .link {
+      margin-top: 15px;
+      font-size: 14px;
+      cursor: pointer;
+      color: #ffeb3b;
+      text-decoration: underline;
+    }
+    .erro, .sucesso {
+      margin-top: 10px;
+      display: none;
+    }
+    .erro { color: #ff6b6b; }
+    .sucesso { color: #4caf50; }
+  </style>
+</head>
+<body>
+  <!-- Login -->
+  <div class="container" id="login-container">
+    <h2>Login CNDM</h2>
+    <input type="text" id="login-usuario" placeholder="Usuário">
+    <input type="password" id="login-senha" placeholder="Senha">
+    <button onclick="fazerLogin()">Entrar</button>
+    <div class="erro" id="erro-login"></div>
+    <div class="link" onclick="mostrarRegistro()">Não tem conta? Cadastre-se</div>
+    <div class="link" onclick="mostrarRecuperar()">Esqueci minha senha</div>
+  </div>
+
+  <!-- Registro -->
+  <div class="container" id="registro-container" style="display: none;">
+    <h2>Registro</h2>
+    <input type="text" id="registro-usuario" placeholder="Usuário">
+    <input type="password" id="registro-senha" placeholder="Senha">
+    <input type="email" id="registro-email" placeholder="Email">
+    <button onclick="fazerRegistro()">Registrar</button>
+    <div class="sucesso" id="sucesso-registro"></div>
+    <div class="erro" id="erro-registro"></div>
+    <div class="link" onclick="mostrarLogin()">Já tem conta? Faça login</div>
+  </div>
+
+  <!-- Recuperação -->
+  <div class="container" id="recuperar-container" style="display: none;">
+    <h2>Recuperar Senha</h2>
+    <input type="text" id="recuperar-usuario" placeholder="Usuário">
+    <input type="email" id="recuperar-email" placeholder="Email cadastrado">
+    <button onclick="fazerRecuperacao()">Recuperar</button>
+    <div class="sucesso" id="sucesso-recuperar"></div>
+    <div class="erro" id="erro-recuperar"></div>
+    <div class="link" onclick="mostrarLogin()">Voltar ao login</div>
+  </div>
+
+<script>
+  const API_URL = 'http://localhost:3000/api';
+
+  function esconderTodas() {
+    document.querySelectorAll('.container').forEach(c => c.style.display = 'none');
+    document.querySelectorAll('.erro, .sucesso').forEach(el => el.style.display = 'none');
+  }
+
+  function mostrarRegistro() {
+    esconderTodas();
+    document.getElementById('registro-container').style.display = 'block';
+  }
+
+  function mostrarLogin() {
+    esconderTodas();
+    document.getElementById('login-container').style.display = 'block';
+  }
+
+  function mostrarRecuperar() {
+    esconderTodas();
+    document.getElementById('recuperar-container').style.display = 'block';
+  }
+
+  async function fazerRegistro() {
+    const usuario = document.getElementById('registro-usuario').value.trim();
+    const senha = document.getElementById('registro-senha').value.trim();
+    const email = document.getElementById('registro-email').value.trim();
+    const erro = document.getElementById('erro-registro');
+    const sucesso = document.getElementById('sucesso-registro');
+
+    if (!usuario || !senha || !email) {
+      erro.textContent = 'Preencha todos os campos!';
+      erro.style.display = 'block';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/auth/registro`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario, senha, email })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        sucesso.textContent = 'Registrado com sucesso!';
+        sucesso.style.display = 'block';
+        setTimeout(mostrarLogin, 2000);
+      } else {
+        erro.textContent = data.erro || 'Erro ao registrar';
+        erro.style.display = 'block';
+      }
+    } catch (err) {
+      erro.textContent = 'Erro na comunicação com o servidor.';
+      erro.style.display = 'block';
+    }
+  }
+
+  async function fazerLogin() {
+    const usuario = document.getElementById('login-usuario').value.trim();
+    const senha = document.getElementById('login-senha').value.trim();
+    const erro = document.getElementById('erro-login');
+
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario, senha })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        sessionStorage.setItem('logado', usuario);
+        window.location.href = 'envio.html';
+      } else {
+        erro.textContent = data.erro || 'Login falhou.';
+        erro.style.display = 'block';
+      }
+    } catch (err) {
+      erro.textContent = 'Erro na comunicação com o servidor.';
+      erro.style.display = 'block';
+    }
+  }
+
+  async function fazerRecuperacao() {
+    const usuario = document.getElementById('recuperar-usuario').value.trim();
+    const email = document.getElementById('recuperar-email').value.trim();
+    const erro = document.getElementById('erro-recuperar');
+    const sucesso = document.getElementById('sucesso-recuperar');
+
+    try {
+      const res = await fetch(`${API_URL}/auth/recuperar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario, email })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        sucesso.textContent = `Sua senha é: ${data.senha}`;
+        sucesso.style.display = 'block';
+      } else {
+        erro.textContent = data.erro || 'Erro na recuperação.';
+        erro.style.display = 'block';
+      }
+    } catch (err) {
+      erro.textContent = 'Erro na comunicação com o servidor.';
+      erro.style.display = 'block';
+    }
+  }
+</script>
+</body>
+</html>

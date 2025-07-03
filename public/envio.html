@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Envio de Avisos</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    #iconeSair {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      background: #ffffff33;
+      color: white;
+      font-size: 24px;
+      padding: 8px 12px;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 9999;
+      transition: background 0.3s;
+    }
+    #iconeSair:hover {
+      background: #ff5252;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ícone de Sair -->
+  <div id="iconeSair" onclick="sair()" title="Sair">⎋</div>
+
+  <!-- Login -->
+  <div id="loginContainer" class="container">
+    <h2>Login</h2>
+    <input type="text" id="usuario" placeholder="Usuário">
+    <input type="password" id="senha" placeholder="Senha">
+    <button onclick="login()">Entrar</button>
+  </div>
+
+  <!-- Tela de envio -->
+  <div id="envioContainer" class="container" style="display: none;">
+    <h2>Enviar Aviso</h2>
+    <textarea id="mensagem" placeholder="Digite a mensagem"></textarea>
+    <br>
+    <button onclick="enviar()">Enviar</button>
+    <button onclick="apagarAvisos()" id="apagarBtn" style="display: none;">Apagar Avisos</button>
+    <button onclick="window.location.href='admin.html'" id="painelAdminBtn" style="display: none;">Painel Admin</button>
+    <button onclick="window.location.href='tv2.html'" id="painelAvisosBtn">Painel Avisos</button>
+    <div id="alerta" class="alerta"></div>
+    <div id="historico" class="historico"></div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000/api/avisos';
+
+    function login() {
+      const usuario = document.getElementById('usuario').value.trim();
+      const senha = document.getElementById('senha').value.trim();
+
+      if (usuario === 'admin' && senha === '1234') {
+        sessionStorage.setItem('logado', 'admin');
+      } else if (usuario && senha) {
+        sessionStorage.setItem('logado', usuario);
+      } else {
+        alert('Usuário ou senha incorretos!');
+        return;
+      }
+
+      document.getElementById('loginContainer').style.display = 'none';
+      document.getElementById('envioContainer').style.display = 'block';
+
+      if (usuario === 'admin') {
+        document.getElementById('apagarBtn').style.display = 'inline-block';
+        document.getElementById('painelAdminBtn').style.display = 'inline-block';
+      }
+
+      mostrarHistorico();
+    }
+
+    async function enviar() {
+      const mensagem = document.getElementById('mensagem').value.trim();
+      const alerta = document.getElementById('alerta');
+
+      if (!mensagem) {
+        alerta.textContent = 'Digite uma mensagem!';
+        alerta.style.color = '#ff5252';
+        alerta.style.display = 'block';
+        return;
+      }
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mensagem })
+        });
+
+        if (!res.ok) throw new Error('Erro ao enviar');
+
+        alerta.textContent = 'Mensagem enviada com sucesso!';
+        alerta.style.color = '#ffeb3b';
+        alerta.style.display = 'block';
+        document.getElementById('mensagem').value = '';
+        mostrarHistorico();
+
+        if (!sessionStorage.getItem('tv2Visualizada')) {
+          sessionStorage.setItem('tv2Visualizada', 'true');
+          window.open('tv2.html', '_blank');
+        }
+
+      } catch (err) {
+        alerta.textContent = 'Erro ao enviar mensagem.';
+        alerta.style.color = '#ff5252';
+        alerta.style.display = 'block';
+      }
+    }
+
+    async function apagarAvisos() {
+      if (!confirm('Tem certeza que deseja apagar todos os avisos?')) return;
+
+      try {
+        const res = await fetch(API_URL, { method: 'DELETE' });
+        if (!res.ok) throw new Error();
+
+        const alerta = document.getElementById('alerta');
+        alerta.textContent = 'Todos os avisos foram apagados.';
+        alerta.style.color = '#ffeb3b';
+        alerta.style.display = 'block';
+        mostrarHistorico();
+      } catch (err) {
+        const alerta = document.getElementById('alerta');
+        alerta.textContent = 'Erro ao apagar.';
+        alerta.style.color = '#ff5252';
+        alerta.style.display = 'block';
+      }
+    }
+
+    async function mostrarHistorico() {
+      const historicoDiv = document.getElementById('historico');
+
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+
+        historicoDiv.innerHTML = '<h3>Histórico de Avisos:</h3>';
+        if (data.length === 0) {
+          historicoDiv.innerHTML += '<p>Nenhum aviso enviado.</p>';
+        } else {
+          const ul = document.createElement('ul');
+          data.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = `${new Date(item.data_hora).toLocaleString('pt-BR')} - ${item.mensagem}`;
+            ul.appendChild(li);
+          });
+          historicoDiv.appendChild(ul);
+        }
+
+      } catch (err) {
+        historicoDiv.innerHTML = '<p>Erro ao carregar avisos.</p>';
+      }
+    }
+
+    function sair() {
+      sessionStorage.removeItem('logado');
+      window.location.href = 'index.html';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const usuarioLogado = sessionStorage.getItem('logado');
+
+      if (usuarioLogado) {
+        document.getElementById('envioContainer').style.display = 'block';
+        document.getElementById('loginContainer').style.display = 'none';
+
+        if (usuarioLogado === 'admin') {
+          document.getElementById('apagarBtn').style.display = 'inline-block';
+          document.getElementById('painelAdminBtn').style.display = 'inline-block';
+        }
+
+        mostrarHistorico();
+      } else {
+        document.getElementById('loginContainer').style.display = 'block';
+      }
+
+      const mensagemInput = document.getElementById('mensagem');
+      if (mensagemInput) {
+        mensagemInput.addEventListener('keypress', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            enviar();
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
