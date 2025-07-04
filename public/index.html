@@ -65,6 +65,7 @@
   </style>
 </head>
 <body>
+
   <!-- Login -->
   <div class="container" id="login-container">
     <h2>Login CNDM</h2>
@@ -100,7 +101,8 @@
   </div>
 
 <script>
-  const API_URL = 'http://localhost:3000/api';
+  // ✅ Corrigido: agora usa URL relativa, funciona local e no Render
+  const API_URL = '/api';
 
   function esconderTodas() {
     document.querySelectorAll('.container').forEach(c => c.style.display = 'none');
