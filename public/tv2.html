@@ -2,79 +2,125 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <title>Painel de Avisos</title>
+  <title>Quadro de Avisos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
   <style>
     body {
+      background: linear-gradient(135deg, #000000, #434343);
+      font-family: 'Orbitron', sans-serif;
+      height: 100vh;
       margin: 0;
-      padding: 0;
-      background-color: #111;
-      color: white;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: center;
-      height: 100vh;
+      align-items: center;
+      color: #00ff88;
+      padding: 20px;
       overflow: hidden;
       text-align: center;
+      position: relative;
     }
 
-    #destaque1, #destaque2 {
-      font-size: 2.5em;
-      margin: 10px 0;
-      color: white;
+    h1 {
+      font-size: 50px;
+      margin-bottom: 40px;
+      color: #ffeb3b;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+    }
+
+    #destaque1 {
+      font-size: 70px;
+      animation: pulse 1.5s infinite;
+    }
+
+    #destaque2 {
+      font-size: 40px;
+      margin-top: 20px;
+      opacity: 0.8;
     }
 
     .hora-destaque {
-      font-size: 0.5em;
-      color: #ffc107;
-      margin-left: 12px;
+      font-size: 20px;
+      color: #ffeb3b;
+      display: block;
+      margin-top: 10px;
     }
 
-    #marquee {
+    #marquee-container {
       width: 100%;
-      padding: 10px 0;
-      color: #ccc;
-      font-size: 1.2em;
-      white-space: nowrap;
       overflow: hidden;
-      box-sizing: border-box;
       position: absolute;
-      bottom: 0;
+      bottom: 80px;
     }
 
-    #marquee span {
+    .marquee {
+      white-space: nowrap;
       display: inline-block;
-      padding-left: 100%;
-      animation: correr 25s linear infinite;
+      animation: scroll 20s linear infinite;
+      font-size: 30px;
     }
 
     .hora {
-      font-size: 0.8em;
-      color: #ff9800;
-      margin-left: 8px;
+      font-size: 16px;
+      color: #ffeb3b;
+      margin-left: 10px;
+      margin-right: 30px;
     }
 
-    @keyframes correr {
-      0% { transform: translateX(0); }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+
+    @keyframes scroll {
+      0% { transform: translateX(100%); }
       100% { transform: translateX(-100%); }
+    }
+
+    /* Botão Voltar */
+    #btn-voltar {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #ffeb3b;
+      color: black;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 5px black;
+      transition: background 0.3s;
+    }
+
+    #btn-voltar:hover {
+      background-color: #ffe600;
     }
   </style>
 </head>
 <body>
 
-  <div id="destaque1"></div>
+  <h1>Quadro de Avisos</h1>
+
+  <div id="destaque1">Aguardando mensagem...</div>
   <div id="destaque2"></div>
-  <div id="marquee"><span>Carregando mensagens...</span></div>
+
+  <div id="marquee-container">
+    <div class="marquee" id="marquee">Sem mensagens...</div>
+  </div>
+
+  <!-- Botão Voltar -->
+  <button id="btn-voltar" onclick="voltar()">Voltar</button>
 
   <script>
     async function atualizarPainel() {
       const destaque1 = document.getElementById('destaque1');
       const destaque2 = document.getElementById('destaque2');
-      const marquee = document.querySelector('#marquee span');
+      const marquee = document.getElementById('marquee');
 
       try {
-        const res = await fetch('/api/avisos');
+        const res = await fetch('/api/avisos'); // ✅ Corrigido para funcionar no Render
         const historico = await res.json();
 
         if (!historico || historico.length === 0) {
@@ -109,8 +155,13 @@
       return d.toLocaleString('pt-BR');
     }
 
-    setInterval(atualizarPainel, 3000);
+    function voltar() {
+      window.history.back();
+    }
+
+    setInterval(atualizarPainel, 2000);
     atualizarPainel();
   </script>
+
 </body>
 </html>
