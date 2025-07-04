@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node server.js"
   },
+  "description": "Projeto com Express e SQLite para Render",
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -13,6 +14,5 @@
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "sqlite3": "^5.1.7"
-  },
-  "description": ""
+  }
 }
