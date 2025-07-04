@@ -2,6 +2,12 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 
+// GET /api/auth/login → resposta informativa para requisições erradas
+router.get("/login", (req, res) => {
+  res.status(405).json({ erro: "Use o método POST para fazer login." });
+});
+
+// POST /api/auth/registro
 router.post("/registro", (req, res) => {
   const { usuario, senha, email } = req.body;
   db.run(
@@ -14,6 +20,7 @@ router.post("/registro", (req, res) => {
   );
 });
 
+// POST /api/auth/login
 router.post("/login", (req, res) => {
   const { usuario, senha } = req.body;
   db.get(
@@ -26,6 +33,7 @@ router.post("/login", (req, res) => {
   );
 });
 
+// POST /api/auth/recuperar
 router.post("/recuperar", (req, res) => {
   const { usuario, email } = req.body;
   db.get(
