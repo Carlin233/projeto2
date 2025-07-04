@@ -1,52 +1,104 @@
-<!-- ... início omitido, igual ao seu -->
-<script>
-  async function atualizarPainel() {
-    const destaque1 = document.getElementById('destaque1');
-    const destaque2 = document.getElementById('destaque2');
-    const marquee = document.getElementById('marquee');
-
-    try {
-      const res = await fetch('/api/avisos');
-      const historico = await res.json();
-
-      if (!historico || historico.length === 0) {
-        destaque1.innerHTML = 'Aguardando mensagem...';
-        destaque2.innerHTML = '';
-        marquee.textContent = 'Sem mensagens...';
-        return;
-      }
-
-      const maisRecente = historico[0];
-      destaque1.innerHTML = `${maisRecente.mensagem}<span class="hora-destaque">${formatarData(maisRecente.data_hora)}</span>`;
-
-      if (historico.length > 1) {
-        const segundo = historico[1];
-        destaque2.innerHTML = `${segundo.mensagem}<span class="hora-destaque">${formatarData(segundo.data_hora)}</span>`;
-      } else {
-        destaque2.innerHTML = '';
-      }
-
-      const mensagens = historico.map(item =>
-        `${item.mensagem}<span class="hora">${formatarData(item.data_hora)}</span>`
-      );
-      marquee.innerHTML = mensagens.join(' — ');
-    } catch (error) {
-      destaque1.innerHTML = 'Erro ao carregar mensagens.';
-      console.error(error);
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel de Avisos</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
     }
-  }
 
-  function formatarData(data) {
-    const d = new Date(data);
-    return d.toLocaleString('pt-BR');
-  }
+    #destaque1, #destaque2 {
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
 
-  function voltar() {
-    window.history.back();
-  }
+    .hora-destaque {
+      font-size: 16px;
+      margin-left: 10px;
+      color: #ffeb3b;
+    }
 
-  setInterval(atualizarPainel, 2000);
-  atualizarPainel();
-</script>
+    #marquee {
+      font-size: 20px;
+      color: #ccc;
+      display: block;
+      margin-top: 40px;
+      white-space: nowrap;
+      overflow: hidden;
+      animation: marquee 20s linear infinite;
+    }
+
+    .hora {
+      font-size: 14px;
+      margin-left: 5px;
+      color: #ff9800;
+    }
+
+    @keyframes marquee {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="destaque1"></div>
+  <div id="destaque2"></div>
+  <div id="marquee"></div>
+
+  <script>
+    async function atualizarPainel() {
+      const destaque1 = document.getElementById('destaque1');
+      const destaque2 = document.getElementById('destaque2');
+      const marquee = document.getElementById('marquee');
+
+      try {
+        const res = await fetch('/api/avisos');
+        const historico = await res.json();
+
+        if (!historico || historico.length === 0) {
+          destaque1.innerHTML = 'Aguardando mensagem...';
+          destaque2.innerHTML = '';
+          marquee.textContent = 'Sem mensagens...';
+          return;
+        }
+
+        const maisRecente = historico[0];
+        destaque1.innerHTML = `${maisRecente.mensagem}<span class="hora-destaque">${formatarData(maisRecente.data_hora)}</span>`;
+
+        if (historico.length > 1) {
+          const segundo = historico[1];
+          destaque2.innerHTML = `${segundo.mensagem}<span class="hora-destaque">${formatarData(segundo.data_hora)}</span>`;
+        } else {
+          destaque2.innerHTML = '';
+        }
+
+        const mensagens = historico.map(item =>
+          `${item.mensagem}<span class="hora">${formatarData(item.data_hora)}</span>`
+        );
+        marquee.innerHTML = mensagens.join(' — ');
+      } catch (error) {
+        destaque1.innerHTML = 'Erro ao carregar mensagens.';
+        console.error(error);
+      }
+    }
+
+    function formatarData(data) {
+      const d = new Date(data);
+      return d.toLocaleString('pt-BR');
+    }
+
+    function voltar() {
+      window.history.back();
+    }
+
+    setInterval(atualizarPainel, 2000);
+    atualizarPainel();
+  </script>
 </body>
 </html>
